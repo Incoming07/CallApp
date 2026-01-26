@@ -3,6 +3,7 @@
  */
 package ru.app.call;
 
+import java.io.IOException;
 import java.lang.reflect.Array;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -12,24 +13,35 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class Server {
-    private static final int BUFFER_SIZE = 1024;
+    private static final int BUFFER_SIZE = 512;
     private static final int SERVER_PORT = 5004; // Порт для приема RTP-пакетов
 
-    public static void main(String[] args) throws Exception {
+    public Thread init() throws Exception {
+        return new Thread(
+            () -> {
+                try {
+                    this.task();
+                } catch (IOException | InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        );
+    }
+
+    private void task() throws IOException, InterruptedException {
         // Создание UDP сокета для приема данных
         try (DatagramSocket socket = new DatagramSocket(SERVER_PORT)) {
             System.out.println("RTP Сервер запущен на порту " + SERVER_PORT);
-
-            byte[] buffer = new byte[BUFFER_SIZE];
             while (true) {
                 // Создание DatagramPacket для приема данных
+                byte[] buffer = new byte[BUFFER_SIZE];
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 
                 // Прием пакета
                 socket.receive(packet);
-
                 // Обработка полученного пакета
                 processRtpPacket(packet);
+                Thread.sleep(500);
             }
         }
     }
@@ -58,7 +70,7 @@ public class Server {
             byte[] cleanData = new byte[data.length - 11];
 
 //            System.arraycopy(data, 12, cleanData, 0, data.length - 1);
-            String dataInf = new String(Arrays.copyOfRange(data, 12, packet.getLength()), StandardCharsets.UTF_8);
+//            String dataInf = new String(Arrays.copyOfRange(data, 12, packet.getLength()), StandardCharsets.UTF_8);
 
             // Вывод информации о пакете
             System.out.println("Получен RTP-пакет:");
@@ -69,7 +81,7 @@ public class Server {
             System.out.println("Таймстамп: " + timestamp);
             System.out.println("SSRC: " + ssrc);
             System.out.println("Длина: " + length);
-            System.out.println("Данные: " + dataInf);
+            System.out.println("Данные: " + Arrays.toString(data));
             System.out.println("------------------------");
         } else {
             System.out.println("Пакет слишком мал для RTP.");

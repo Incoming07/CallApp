@@ -3,44 +3,76 @@
  */
 package ru.app.call;
 
+import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.SocketException;
+import java.net.UnknownHostException;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 //клиентское udp соединение с rtp
 public class Client {
+    private String ADRESS = "localhost";
+    private int PORT = 5004; // Порт сервера
 
-    public static void main(String[] args) throws Exception {
+    public Thread init() throws Exception {
         // Параметры для соединения
-        String serverAddress = "localhost";
-        int serverPort = 5004; // Порт сервера
 
+
+        return new Thread(
+            () -> {
+                try {
+                    this.task();
+                } catch (IOException | InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        );
+//        Thread.sleep(5000);
+    }
+
+    private void task() throws IOException, InterruptedException {
         // Создание UDP сокета
+        Record rec = new Record();
+        Thread threadRec = rec.init();
+        threadRec.join();
+        threadRec.start();
+
         try (DatagramSocket socket = new DatagramSocket()) {
             // Адрес сервера
-            InetAddress serverIp = InetAddress.getByName(serverAddress);
+            InetAddress serverIp = InetAddress.getByName(ADRESS);
 
-            // Данные, которые будут отправлены (например, аудио данные)
-            byte[] data = "Hello, RTP!".getBytes();
+            while (true) {
+                // Данные, которые будут отправлены (например, аудио данные)
+//                byte[] data = "Hello, RTP!".getBytes();
+                byte[] data = rec.recordQueue.poll();
 
-            // Формирование RTP заголовка
-            byte[] rtpHeader = createRtpHeader(/*добавивть инкремент идентификатора пакета*/);
+                if (data != null) {
+                    // Формирование RTP заголовка
+                    byte[] rtpHeader = this.createRtpHeader(/*добавивть инкремент идентификатора пакета*/);
 
-            // Объединение заголовка и данных
-            byte[] packetData = new byte[rtpHeader.length + data.length];
-            System.arraycopy(rtpHeader, 0, packetData, 0, rtpHeader.length);
-            System.arraycopy(data, 0, packetData, rtpHeader.length, data.length);
+                    // Объединение заголовка и данных
+                    byte[] packetData = new byte[rtpHeader.length + data.length];
+                    System.arraycopy(rtpHeader, 0, packetData, 0, rtpHeader.length);
+                    System.arraycopy(data, 0, packetData, rtpHeader.length, data.length);
 
-            // Создание пакета
-            DatagramPacket packet = new DatagramPacket(packetData, packetData.length, serverIp, serverPort);
+                    // Создание пакета
+                    DatagramPacket packet = new DatagramPacket(packetData, packetData.length, serverIp, PORT);
 
-            // Отправка пакета
-            socket.send(packet);
-            System.out.println("RTP packet sent to " + serverAddress + ":" + serverPort);
+                    // Отправка пакета
+                    socket.send(packet);
+                    System.out.println("RTP packet sent to " + ADRESS + ":" + PORT);
+                }
+                Thread.sleep(500);
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 
-    private static byte[] createRtpHeader() {
+
+    private byte[] createRtpHeader() {
         // Структура RTP заголовка:
         // В этом примере формируем минимальный заголовок
         // В реальном приложении необходимо правильно устанавливать все поля
