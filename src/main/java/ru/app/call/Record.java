@@ -1,13 +1,11 @@
 package ru.app.call;
 
-import java.io.ByteArrayInputStream;
 import java.util.Arrays;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import javax.sound.sampled.*;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.util.Scanner;
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.TargetDataLine;
 
 
 public class Record {
@@ -18,37 +16,7 @@ public class Record {
     public Thread record;
 
     public Thread init() throws InterruptedException {
-        // Настройка формата аудио
-//        AudioFormat audioFormat = new AudioFormat(
-//            AudioFormat.Encoding.PCM_SIGNED,
-//            16000.0F,  // Частота дискретизации
-//            16,        // Глубина звука (бит)
-//            1,         // Количество каналов (моно)
-//            2,         // Размер.samples в frame (bytes per sample * number of channels)
-//            16000.0F,  // Frame rate
-//            false      // Little-endian
-//        );
-
-//        try (TargetDataLine targetDataLine = AudioSystem.getTargetDataLine(audioFormat)) {
-//            // Получение доступа к микрофону
-//            TargetDataLine.Info info = new TargetDataLine.Info(TargetDataLine.class, audioFormat);
-//
-//
-//            // Открытие и запуск записи
-//            targetDataLine.open(audioFormat);
-////            targetDataLine.start();
-
-//        System.out.println("Press Enter to start recording...");
-//        Scanner scanner = new Scanner(System.in);
-//        scanner.nextLine();
-
         System.out.println("Recording...");
-
-        // Буфер для хранения аудиоданных
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-//            int numBytesRead;
-        byte[] data = new byte[256];
-
         return new Thread(
             () -> {
                 try {
@@ -83,7 +51,6 @@ public class Record {
             // Получение доступа к микрофону
             TargetDataLine.Info info = new TargetDataLine.Info(TargetDataLine.class, audioFormat);
 
-
             // Открытие и запуск записи
             targetDataLine.open(audioFormat);
             targetDataLine.start();
@@ -113,11 +80,10 @@ public class Record {
                     System.arraycopy(buffer, chunkSize, buffer, 0, bufferSize - chunkSize);
                     bufferSize -= chunkSize;
                 }
-//            byteArrayOutputStream.write(data, 0, numBytesRead);
-                Thread.sleep(500);
+//                Thread.sleep(500);
                 System.out.println(numBytesRead + " " + recordQueue.size());
             }
-        } catch (LineUnavailableException e/*| IOException e*/) {
+        } catch (LineUnavailableException e) {
             e.printStackTrace();
         }
     }

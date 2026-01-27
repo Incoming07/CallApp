@@ -1,20 +1,15 @@
-/*
- * Copyright (c) Huawei Technologies Co., Ltd. 2024-2026. All rights reserved.
- */
 package ru.app.call;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class Server {
     private static final int BUFFER_SIZE = 512;
     private static final int SERVER_PORT = 5004; // Порт для приема RTP-пакетов
+    public static final ConcurrentLinkedQueue<byte[]>  recordQueue = new ConcurrentLinkedQueue<>();
 
     public Thread init() throws Exception {
         return new Thread(
@@ -40,13 +35,13 @@ public class Server {
                 // Прием пакета
                 socket.receive(packet);
                 // Обработка полученного пакета
-                processRtpPacket(packet);
-                Thread.sleep(500);
+                this.processRtpPacket(packet);
+//                Thread.sleep(500);
             }
         }
     }
 
-    private static void processRtpPacket(DatagramPacket packet) {
+    private void processRtpPacket(DatagramPacket packet) {
         // Получение данных из пакета
         byte[] data = packet.getData();
         int length = packet.getLength();
@@ -69,20 +64,21 @@ public class Server {
 
             byte[] cleanData = new byte[data.length - 11];
 
-//            System.arraycopy(data, 12, cleanData, 0, data.length - 1);
-//            String dataInf = new String(Arrays.copyOfRange(data, 12, packet.getLength()), StandardCharsets.UTF_8);
+            recordQueue.add(
+                Arrays.copyOfRange(data, 12, packet.getLength())
+            );
 
             // Вывод информации о пакете
-            System.out.println("Получен RTP-пакет:");
-            System.out.println("Версия: " + version);
-            System.out.println("Тип полезной нагрузки: " + payloadType);
-            System.out.println("Флаг: " + marker);
-            System.out.println("Номер пакета: " + sequenceNumber);
-            System.out.println("Таймстамп: " + timestamp);
-            System.out.println("SSRC: " + ssrc);
-            System.out.println("Длина: " + length);
-            System.out.println("Данные: " + Arrays.toString(data));
-            System.out.println("------------------------");
+//            System.out.println("Получен RTP-пакет:");
+//            System.out.println("Версия: " + version);
+//            System.out.println("Тип полезной нагрузки: " + payloadType);
+//            System.out.println("Флаг: " + marker);
+//            System.out.println("Номер пакета: " + sequenceNumber);
+//            System.out.println("Таймстамп: " + timestamp);
+//            System.out.println("SSRC: " + ssrc);
+//            System.out.println("Длина: " + length);
+//            System.out.println("Данные: " + Arrays.toString(data));
+//            System.out.println("------------------------");
         } else {
             System.out.println("Пакет слишком мал для RTP.");
         }

@@ -1,6 +1,3 @@
-/*
- * Copyright (c) Huawei Technologies Co., Ltd. 2024-2026. All rights reserved.
- */
 package ru.app.call;
 
 import java.io.IOException;
@@ -64,10 +61,8 @@ public class Client {
                     socket.send(packet);
                     System.out.println("RTP packet sent to " + ADRESS + ":" + PORT);
                 }
-                Thread.sleep(500);
+//                Thread.sleep(500);
             }
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
         }
     }
 
