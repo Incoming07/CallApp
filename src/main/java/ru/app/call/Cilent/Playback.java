@@ -1,6 +1,5 @@
-package ru.app.call;
+package ru.app.call.Cilent;
 
-import java.io.IOException;
 import java.util.Arrays;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;
@@ -10,13 +9,13 @@ import javax.sound.sampled.SourceDataLine;
 
 public class Playback {
 
-    public Thread init(){
+    public Thread init() {
         return new Thread(
             this::task
         );
     }
 
-    private void task(){
+    private void task() {
         AudioFormat audioFormat = new AudioFormat(
             AudioFormat.Encoding.PCM_SIGNED,
             16000.0F,  // Частота дискретизации
@@ -33,16 +32,14 @@ public class Playback {
             line.open(audioFormat);
             line.start();
 
-            int bufferSize = 256;
-            int offset = 0;
-            int bytesWritten = 0;
             byte[] audioData;
 
+            short i = 0;
             while (true) {
-                audioData = Server.recordQueue.poll();
+                audioData = Listen.recordQueue.poll();
                 if (audioData != null) {
-                    System.out.println("Воспроизведение...");
-                    System.out.println(Arrays.toString(audioData));
+//                    System.out.println("Воспроизведение...");
+//                    System.out.println(Arrays.toString(audioData));
 //                    int bytesToWrite = Math.min(bufferSize, audioData.length - bytesWritten);
                     byte[] buffer = Arrays.copyOfRange(audioData, 0, audioData.length);
 
@@ -51,8 +48,11 @@ public class Playback {
 //                    bytesWritten += bytesToWrite;
 //                    offset += bytesToWrite;
                 }
-//                    line.drain();
-
+                if (i % 256 == 0) {
+                    line.drain();
+                    i = 0;
+                }
+                i++;
 //                Thread.sleep(500);
             }
 //            line.drain();

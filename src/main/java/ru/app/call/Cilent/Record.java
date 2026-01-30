@@ -1,4 +1,4 @@
-package ru.app.call;
+package ru.app.call.Cilent;
 
 import java.util.Arrays;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -10,13 +10,14 @@ import javax.sound.sampled.TargetDataLine;
 
 public class Record {
 
+    static private int chunkSize = 256;
     static private int numBytesRead;
     static private volatile boolean isRunning = true;
     public final ConcurrentLinkedQueue<byte[]> recordQueue = new ConcurrentLinkedQueue<>();
     public Thread record;
 
     public Thread init() throws InterruptedException {
-        System.out.println("Recording...");
+//        System.out.println("Recording...");
         return new Thread(
             () -> {
                 try {
@@ -33,10 +34,9 @@ public class Record {
     }
 
     private void task() throws InterruptedException {
-        int chunkSize = 256;
         byte[] buffer = new byte[chunkSize];
         int bufferSize = 0;
-        byte[] data = new byte[256];
+        byte[] data = new byte[chunkSize];
 
         AudioFormat audioFormat = new AudioFormat(
             AudioFormat.Encoding.PCM_SIGNED,
@@ -55,15 +55,15 @@ public class Record {
             targetDataLine.open(audioFormat);
             targetDataLine.start();
 
-
+            short i = 0;
             while (isRunning) {
                 numBytesRead = targetDataLine.read(data, 0, data.length);
                 if (numBytesRead == -1) {
                     break;
                 }
                 // Добавляем новые данные в буфер
-                for (int i = 0; i < numBytesRead; i++) {
-                    buffer[bufferSize + i] = data[i];
+                if (numBytesRead >= 0) {
+                    System.arraycopy(data, 0, buffer, bufferSize, numBytesRead);
                 }
                 bufferSize += numBytesRead;
 
@@ -81,7 +81,13 @@ public class Record {
                     bufferSize -= chunkSize;
                 }
 //                Thread.sleep(500);
-                System.out.println(numBytesRead + " " + recordQueue.size());
+//                System.out.println(numBytesRead + " " + recordQueue.size());
+                if (i % 512 == 0) {
+//                    targetDataLine.drain();
+                    i = 0;
+//                    System.gc();
+                }
+                i++;
             }
         } catch (LineUnavailableException e) {
             e.printStackTrace();

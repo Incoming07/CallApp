@@ -1,4 +1,7 @@
-package ru.app.call;
+/*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2024-2026. All rights reserved.
+ */
+package ru.app.call.Cilent;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -6,16 +9,14 @@ import java.net.DatagramSocket;
 import java.util.Arrays;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-public class Server {
-    private static final int BUFFER_SIZE = 512;
-    private static final int SERVER_PORT = 5004; // Порт для приема RTP-пакетов
-    public static final ConcurrentLinkedQueue<byte[]>  recordQueue = new ConcurrentLinkedQueue<>();
+public class Listen {
+    public static final ConcurrentLinkedQueue<byte[]> recordQueue = new ConcurrentLinkedQueue<>();
 
-    public Thread init() throws Exception {
+    public Thread init(int serverPort, int bufferSize){
         return new Thread(
             () -> {
                 try {
-                    this.task();
+                    this.listen(serverPort, bufferSize);
                 } catch (IOException | InterruptedException e) {
                     throw new RuntimeException(e);
                 }
@@ -23,14 +24,14 @@ public class Server {
         );
     }
 
-    private void task() throws IOException, InterruptedException {
+    private void listen(int serverPort, int bufferSize) throws IOException, InterruptedException {
         // Создание UDP сокета для приема данных
-        try (DatagramSocket socket = new DatagramSocket(SERVER_PORT)) {
-            System.out.println("RTP Сервер запущен на порту " + SERVER_PORT);
+        try (DatagramSocket socket = new DatagramSocket(serverPort)) {
+            System.out.println("RTP Сервер запущен на порту " + serverPort);
             while (true) {
                 // Создание DatagramPacket для приема данных
-                byte[] buffer = new byte[BUFFER_SIZE];
-                DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+                byte[] buffer = new byte[bufferSize];
+                DatagramPacket packet = new DatagramPacket(buffer, bufferSize);
 
                 // Прием пакета
                 socket.receive(packet);

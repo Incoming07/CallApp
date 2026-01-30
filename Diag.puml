@@ -1,0 +1,18 @@
+@startuml
+package "Server and Client" <<Rectangle>>{
+  Class Server
+  Class Client
+}
+Class Listen
+Class Send
+Class Record
+Class Playback
+
+Client --> Listen
+Client --> Record
+Record --> Send
+Listen --> Playback
+
+Server ...> "listener \ndata" Listen
+Send  "record \ndata" ..>  Server
+@enduml

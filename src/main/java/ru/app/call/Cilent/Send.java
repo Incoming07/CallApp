@@ -1,35 +1,28 @@
-package ru.app.call;
+/*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2024-2026. All rights reserved.
+ */
+package ru.app.call.Cilent;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.SocketException;
-import java.net.UnknownHostException;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
-//клиентское udp соединение с rtp
-public class Client {
-    private String ADRESS = "localhost";
-    private int PORT = 5004; // Порт сервера
+public class Send {
 
-    public Thread init() throws Exception {
-        // Параметры для соединения
-
-
+    public Thread init(String address, int port){
         return new Thread(
             () -> {
                 try {
-                    this.task();
+                    this.send(address, port);
                 } catch (IOException | InterruptedException e) {
                     throw new RuntimeException(e);
                 }
             }
         );
-//        Thread.sleep(5000);
     }
 
-    private void task() throws IOException, InterruptedException {
+    private void send(String address, int port) throws IOException, InterruptedException {
         // Создание UDP сокета
         Record rec = new Record();
         Thread threadRec = rec.init();
@@ -38,7 +31,7 @@ public class Client {
 
         try (DatagramSocket socket = new DatagramSocket()) {
             // Адрес сервера
-            InetAddress serverIp = InetAddress.getByName(ADRESS);
+            InetAddress serverIp = InetAddress.getByName(address);
 
             while (true) {
                 // Данные, которые будут отправлены (например, аудио данные)
@@ -55,11 +48,11 @@ public class Client {
                     System.arraycopy(data, 0, packetData, rtpHeader.length, data.length);
 
                     // Создание пакета
-                    DatagramPacket packet = new DatagramPacket(packetData, packetData.length, serverIp, PORT);
+                    DatagramPacket packet = new DatagramPacket(packetData, packetData.length, serverIp, port);
 
                     // Отправка пакета
                     socket.send(packet);
-                    System.out.println("RTP packet sent to " + ADRESS + ":" + PORT);
+//                    System.out.println("RTP packet sent to " + SEND_ADRESS + ":" + SEND_PORT);
                 }
 //                Thread.sleep(500);
             }
